@@ -1,18 +1,18 @@
 VISIT_ONCE = [
     # pet clinic
-    'http:\/\/localhost:4200\/petclinic\/owners\/\d+',
-    'http:\/\/localhost:4200\/petclinic\/vets\/\d+\/edit',
-    'http:\/\/localhost:4200\/petclinic\/pettypes\/\d+\/edit',
-    'http:\/\/localhost:4200\/petclinic\/specialties\/\d+\/edit',
+    r'http://localhost:4200/petclinic/owners/\d+',
+    r'http://localhost:4200/petclinic/vets/\d+/edit',
+    r'http://localhost:4200/petclinic/pettypes/\d+/edit',
+    r'http://localhost:4200/petclinic/specialties/\d+/edit',
     # saleor
-    'http:\/\/localhost:3000\/default-channel\/products\/.+'
+    r'http://localhost:3000/default-channel/products/.+'
 ]
 
 NEVER_VISIT = [
     # saleor
-    'http:\/\/localhost:3000\/default-channel\/products$',
-    'http:\/\/localhost:3000\/default-channel\/collections\/.+',
-    'http:\/\/localhost:3000\/default-channel\/categories\/.+'
+    r'http://localhost:3000/default-channel/products$',
+    r'http://localhost:3000/default-channel/collections/.+',
+    r'http://localhost:3000/default-channel/categories/.+'
 ]
 
 FORBIDDEN_ACTIONS = [

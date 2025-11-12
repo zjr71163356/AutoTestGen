@@ -14,6 +14,8 @@ from .utils import log_user_messages
 
 load_dotenv()
 
+OHMYGPT_BASE_URL = "https://api.ohmygpt.com/v1/"
+
 
 def create_model_chain(model):
     def invoke_model_chain(system_prompt, user_messages):
@@ -46,14 +48,37 @@ def create_model_chain(model):
 
     return invoke_model_chain
 
-gpt4o = ChatOpenAI(model="gpt-4o", max_tokens=256, temperature=0)
-gpt35 = ChatOpenAI(model="gpt-3.5-turbo", max_tokens=256, temperature=0)
-sonnet = ChatAnthropic(model="claude-3-5-sonnet-20240620", max_tokens=1024, temperature=0)
-haiku = ChatAnthropic(model="claude-3-haiku-20240307", max_tokens=1024, temperature=0)
+gpt4o = ChatOpenAI(
+    model="gpt-4o",
+    max_tokens=256,
+    temperature=0,
+    base_url=OHMYGPT_BASE_URL,
+)
+gpt35 = ChatOpenAI(
+    model="gpt-3.5-turbo",
+    max_tokens=256,
+    temperature=0,
+    base_url=OHMYGPT_BASE_URL,
+)
+sonnet = ChatAnthropic(
+    model="claude-3-5-sonnet-20240620",
+    max_tokens=1024,
+    temperature=0,
+    anthropic_api_url=OHMYGPT_BASE_URL,
+)
+haiku = ChatAnthropic(
+    model="claude-3-haiku-20240307",
+    max_tokens=1024,
+    temperature=0,
+    anthropic_api_url=OHMYGPT_BASE_URL,
+)
 
 gpt4o_chain = create_model_chain(gpt4o)
 gpt35_chain = create_model_chain(gpt35)
 sonnet_chain = create_model_chain(sonnet)
 haiku_chain = create_model_chain(haiku)
 
-openai_embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
+openai_embeddings = OpenAIEmbeddings(
+    model="text-embedding-3-large",
+    base_url=OHMYGPT_BASE_URL,
+)
