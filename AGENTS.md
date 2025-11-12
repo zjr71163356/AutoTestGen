@@ -1,33 +1,31 @@
 # Repository Guidelines
+## language
+用中文回答
 
 ## Project Structure & Module Organization
-- `autoe2e/` contains the AutoE2E pipeline: `crawler/` steers navigation, `browser/` wraps Selenium, `utils/` offers shared helpers, and orchestrators such as `loop_utils.py` and `infer_utils.py` drive feature discovery.
-- `configs/` stores uppercase JSON files keyed by `APP_NAME`; update or add entries when onboarding a new benchmark subject.
-- `benchmark/` ships the sample web apps plus `_log-server/` for coverage tracking; keep generated data out of version control.
+- `autoe2e/` hosts the feature-generation logic: `infer_utils.py` orchestrates runs, `llm_api_call.py` wraps OpenAI/Anthropic clients, and `crawler/` manages Selenium drivers. Treat each submodule as a focused unit and keep shared helpers in `autoe2e/utils.py`.
+- `configs/*.json` define app-specific metadata (e.g., `PETCLINIC.json` base URL). Ensure any new config name matches the `APP_NAME` you place in `.env`.
+- `benchmark/` contains subject applications and the optional `_log-server` (Flask + Redis) used during coverage evaluation.
+- Root artifacts: `requirements.txt`/`pyproject.toml` describe dependencies, `baseline-prompts.md` documents LLM prompts, and `workflow.png` illustrates the end-to-end phases.
 
 ## Build, Test, and Development Commands
-- `python -m venv .venv && source .venv/bin/activate` prepares a local virtual environment.
-- `pip install -r requirements.txt` installs Selenium, langchain, pytest, and related tooling.
-- Populate `.env` (set `APP_NAME`, `ANTHROPIC_API_KEY`, `ATLAS_URI`), then run `python main.py` to execute the AutoE2E loop.
-- `cd benchmark/_log-server && pip install -r requirements.txt && flask --app extract.py --debug run` launches the optional coverage tracker.
-- `python -m pytest` (or `pytest tests/test_loop_utils.py`) runs the automated checks.
+- `uv venv .venv && uv pip sync requirements.txt` — create/update the Python 3.12 environment deterministically from the lock file.
+- `uv run python main.py` — executes the AutoE2E pipeline using the config selected by `APP_NAME`; requires `.env` with Anthropic/OpenAI keys, `ATLAS_URI`, and optional proxy/SOCKS vars.
+- `uv run pytest` — runs the Python test suite (integration helpers live under `autoe2e/` and `benchmark/`). Prefer adding focused pytest modules near the code they cover.
+- `uv run flask --app benchmark/_log-server/extract.py run` — starts the coverage-tracking server when validating benchmarks.
 
 ## Coding Style & Naming Conventions
-- Target Python 3.10+, use 4-space indentation, and add explicit type hints (`str | None`) similar to `loop_utils.py`.
-- Keep modules snake_case, classes PascalCase, constants UPPER_SNAKE_CASE, and JSON keys consistent with existing configs.
-- Prefer `autoe2e.utils.logger.logger` to standard prints, and centralize reusable prompts or strings in `prompts.py`.
+- Python code uses 4-space indentation, type hints where feasible, and snake_case for functions/variables; classes remain in PascalCase.
+- Keep prompt strings and regex patterns as raw literals to avoid escape warnings (see `autoe2e/manual_ndd.py` for the canonical form).
+- When adding modules, expose public functions via `__all__` to control `from autoe2e import *` usage.
+- Run `uv run python -m compileall .` or `uv run pytest` before opening a PR to catch syntax issues introduced by new prompts or configs.
 
 ## Testing Guidelines
-- Author pytest-based tests under a `tests/` tree mirroring the package under test, keeping fixture data nearby.
-- Exercise crawler or Selenium flows against the apps in `benchmark/`, noting which subject you used and starting `_log-server` when gathering coverage.
-- Mock Anthropic and MongoDB touchpoints so runs stay deterministic; note the command you executed (e.g., `pytest tests/test_loop_utils.py -k feature_filtering`) in the PR.
+- Use `pytest` fixtures for browser or database setup; name files `test_*.py` and place them beside the code under test to keep context local.
+- Cover new prompt logic by asserting structured outputs (e.g., JSON arrays) and add regression cases for manual NDD rules when editing `manual_ndd.py`.
+- For benchmark apps, provide reproduction steps in the test docstring so reviewers can replay Selenium flows if needed.
 
 ## Commit & Pull Request Guidelines
-- Keep commit subjects short, present tense, and punctuation-free, matching the existing history (e.g., `add saleor code directly`).
-- Mention behavior changes in the body, link issues with `Fixes #123`, and flag config or schema updates.
-- PR descriptions should summarize scope, list validation commands, and attach screenshots or logs when relevant.
-
-## Configuration & Security Tips
-- Keep secrets out of Git: store `ANTHROPIC_API_KEY`, `ATLAS_URI`, and similar credentials only in untracked `.env` files.
-- Align `APP_NAME` with the uppercase filename in `configs/`, sanitizing new configs before committing.
-- Logs land in `autoe2e/logs/`; clean local artifacts before opening a PR so they do not enter the diff.
+- Follow the existing history pattern: short (<72 chars) imperative subject (“Add Saleor config loader”), optional detailed body wrapped at 100 chars.
+- Every PR should describe the scenario, commands run (`uv run pytest`, etc.), config changes, and any environment prerequisites. Link the relevant issue or benchmark ID, and attach screenshots/log excerpts when UI behavior changes.
+- Keep commits logically scoped (e.g., “Add socksio proxy support” separate from “Update prompts”) to simplify cherry-picking and bisects.

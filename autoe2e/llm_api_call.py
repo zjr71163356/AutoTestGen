@@ -1,3 +1,4 @@
+import os
 import boto3
 from dotenv import load_dotenv
 
@@ -14,22 +15,24 @@ from .utils import log_user_messages
 
 load_dotenv()
 
-OHMYGPT_BASE_URL = "https://api.ohmygpt.com/v1/"
+OHMYGPT_BASE_URL = os.getenv("OHMYGPT_BASE_URL", "https://api.ohmygpt.com")
+OPENAI_BASE_URL = f"{OHMYGPT_BASE_URL.rstrip('/')}/v1"
+ANTHROPIC_BASE_URL = OHMYGPT_BASE_URL.rstrip('/')
 
 
 def create_model_chain(model):
     def invoke_model_chain(system_prompt, user_messages):
         logger.info('Prompt:')
         log_user_messages(user_messages.content)
-        
+
         prompt = ChatPromptTemplate.from_messages([
             SystemMessage(content=system_prompt),
             user_messages
         ])
         output_parser = StrOutputParser()
-        
+
         chain = prompt | model | output_parser
-        
+
         if model.__class__.__name__ == "ChatOpenAI":
             with get_openai_callback() as cb:
                 res = chain.invoke({})
@@ -38,39 +41,40 @@ def create_model_chain(model):
                 logger.info(cb)
                 logger.info("")
                 return res
-        
+
         res = chain.invoke({})
         logger.info("Response:")
         logger.info(res)
         logger.info("")
-        
+
         return res
 
     return invoke_model_chain
+
 
 gpt4o = ChatOpenAI(
     model="gpt-4o",
     max_tokens=256,
     temperature=0,
-    base_url=OHMYGPT_BASE_URL,
+    base_url=OPENAI_BASE_URL,
 )
 gpt35 = ChatOpenAI(
     model="gpt-3.5-turbo",
     max_tokens=256,
     temperature=0,
-    base_url=OHMYGPT_BASE_URL,
+    base_url=OPENAI_BASE_URL,
 )
 sonnet = ChatAnthropic(
-    model="claude-3-5-sonnet-20240620",
+    model="claude-sonnet-4-5",
     max_tokens=1024,
     temperature=0,
-    anthropic_api_url=OHMYGPT_BASE_URL,
+    anthropic_api_url=ANTHROPIC_BASE_URL,
 )
 haiku = ChatAnthropic(
-    model="claude-3-haiku-20240307",
+    model="claude-haiku-4-5",
     max_tokens=1024,
     temperature=0,
-    anthropic_api_url=OHMYGPT_BASE_URL,
+    anthropic_api_url=ANTHROPIC_BASE_URL,
 )
 
 gpt4o_chain = create_model_chain(gpt4o)
@@ -80,5 +84,5 @@ haiku_chain = create_model_chain(haiku)
 
 openai_embeddings = OpenAIEmbeddings(
     model="text-embedding-3-large",
-    base_url=OHMYGPT_BASE_URL,
+    base_url=OPENAI_BASE_URL,
 )
