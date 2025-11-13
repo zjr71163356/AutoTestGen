@@ -192,4 +192,4 @@ if [[ "${APP_NAME}" == "PETCLINIC" ]]; then
 fi
 
 echo "使用 APP_NAME=${APP_NAME} 的配置运行 AutoE2E..."
-exec uv run python main.py "$@"
+exec env PYTHONUNBUFFERED=1 uv run python -u main.py "$@"

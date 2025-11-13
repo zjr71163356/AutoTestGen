@@ -189,3 +189,4 @@ json.dump(
     },
     open(f'./report/{APP_NAME}.json', 'w+')
 )
+

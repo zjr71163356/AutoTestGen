@@ -60,16 +60,15 @@ def png_to_base64(image_path):
 
 
 def extract_response_content(text):
-    """Extracts content enclosed within a <Response> tag.
+    """Extracts content inside <Response> tags, tolerating missing closing tags."""
+    # Preferred form: <Response>...</Response>
+    match = re.search(r"<Response>\s*:?\s*(.*?)</Response>", text, re.DOTALL)
+    if match:
+        return match.group(1).strip()
 
-    Args:
-        text: The string to parse.
-
-    Returns:
-        The content inside the <Response> tag, or None if not found.
-    """
-    match = re.search(r"<Response>(.*?)</Response>", text, re.DOTALL)
-    return match.group(1) if match else None
+    # Fallback: content after <Response> when model returns `<Response>:\n...`
+    match = re.search(r"<Response>\s*:?\s*(.*)", text, re.DOTALL)
+    return match.group(1).strip() if match else None
 
 
 def log_user_messages(user_messages):
