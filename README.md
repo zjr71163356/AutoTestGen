@@ -4,9 +4,14 @@ Source code and benchmark subjects for "AutoE2E: Feature-Driven End-To-End Test 
 ![AutoE2E Workflow](./workflow.png)
 
 ## Requirements
-Install the required packages using the following command:
+This project uses `uv` for package management. Install `uv` first:
 ```bash
-pip install -r requirements.txt
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+Then install dependencies:
+```bash
+uv sync
 ```
 
 ## Usage
@@ -18,7 +23,7 @@ Before running the project, you need to set the environment variables in the `.e
 
 Then you can run the project using the following command:
 ```bash
-python main.py
+uv run main.py
 ```
 
 ## LLM Prompts

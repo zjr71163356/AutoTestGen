@@ -1,0 +1,319 @@
+navigate to homepage
+display clinic brand logo
+trigger site-wide branding or identity display
+reset user session or navigation state to homepage
+load hero image or introductory content on click
+open owner dropdown menu
+navigate to owner profile page
+access owner-specific services
+view owner account details
+manage owner appointments
+open veterinarians dropdown menu
+navigate to veterinarians page
+view list of available veterinarians
+filter or search for specific veterinarians
+access veterinarian contact or appointment information
+navigate to pet types page
+view available pet types
+select a pet type to proceed to services
+filter services by pet type
+initiate appointment booking for a specific pet type
+navigate to the specialties page
+search for existing pet owner records
+search for existing pet owner records
+Add a new pet owner record
+Add a new pet owner record
+Search for an existing pet owner record
+Navigate to the owners management page
+Open the owners dropdown menu
+Initiate a search for owners by entering a query
+navigate to the list of all veterinarians
+navigate to homepage
+display clinic brand/logo
+trigger site-wide navigation reset
+load homepage content on click
+show welcome message on homepage
+Open the Owners dropdown menu
+Navigate to owner-specific services (e.g., schedule appointments)
+Access owner dashboard or profile
+View or manage pet records for owner
+Select ‘My Pets’ from the dropdown to view pet details
+view list of available veterinarians
+filter veterinarians by specialty
+access veterinarian appointment booking page
+view veterinarian profiles with contact information
+navigate to veterinarian directory with search functionality
+navigate to pet types page
+open pet types dropdown or modal
+filter services by pet type
+find specialists for specific pet types
+access pet type-specific appointment options
+navigate to specialties page
+Search for existing pet owner records
+Search for existing pet owner records
+Add a new pet owner record
+Add new pet owner record
+Navigate to owner creation form
+Initiate owner record creation process
+Open the new owner form modal or page
+Trigger owner form submission workflow
+navigate to the list of all veterinarians
+navigate to the list of all veterinarians
+Add a new veterinarian
+add new veterinarian
+Navigate to the homepage
+navigate to homepage
+open owner dropdown menu
+navigate to owner profile page
+access owner dashboard
+view owner appointment history
+manage owner account settings
+open owner dropdown menu
+navigate to owner dashboard
+access owner account
+view owner pets
+schedule owner appointment
+open veterinarian directory
+filter veterinarians by specialty
+view available veterinarian appointments
+navigate to vet profile page
+search for vets by location
+open the veterinarians dropdown menu
+select a specific veterinarian from the dropdown
+filter or search for veterinarians by specialty or location
+display a list of available veterinarians
+navigate to a page showing vet profiles or availability
+open owner dropdown menu
+navigate to owner-specific dashboard
+access owner account settings
+view owner profile information
+trigger owner-related navigation options
+open owners dropdown menu
+navigate to owner profile page
+access owner account settings
+log in as an owner
+view owner-specific services or appointments
+open veterinarians dropdown menu
+navigate to veterinary specialties page
+reveal submenu of available veterinary specialties
+trigger dropdown toggle animation
+allow user to select a specific vet specialty from dropdown
+open the veterinarians dropdown menu to view available veterinary specialties or profiles
+navigate to owners management section
+open owners dropdown menu
+navigate to owners list
+access owner management features
+view owner records
+edit owner records
+open veterinarians dropdown menu
+navigate to veterinarians section to view or manage vet records
+trigger dropdown to reveal vet-related actions or links
+access vet records by selecting from dropdown
+open submenu for vet-related tools or filters
+click veterinarians dropdown to expand options
+select a specific veterinarian from the dropdown list
+navigate to the selected veterinarian's record page
+view list of appointments or records for the selected veterinarian
+filter pet owner records by the selected veterinarian
+navigate to the owners section to manage pet owner records
+open owners dropdown menu
+navigate to owners list page
+view existing owner records
+access owner management features
+toggle owners navigation menu
+open veterinarians dropdown menu
+navigate to veterinarians section
+toggle dropdown to reveal vet-related options
+access vet list from navigation menu
+select vet from dropdown menu
+open veterinarian dropdown menu
+navigate to veterinarians section
+view list of available veterinarians
+assign a veterinarian to a new pet owner
+select a veterinarian from the dropdown
+navigate to owners section
+access owner management page
+open dropdown menu for owner-related actions
+view list of registered owners
+manage owner profiles
+open owners dropdown menu
+navigate to owners management page
+access owner-related actions (e.g., add/edit owner)
+trigger owner context menu for selection or filtering
+display owner list or search interface
+open veterinarians dropdown menu
+navigate to veterinarians list page
+trigger vet management interface
+display vet search or filter options
+access add new veterinarian form
+open the veterinarians dropdown menu
+navigate to the list of all veterinarians
+access the option to add a new veterinarian
+filter or search for specific veterinarians
+view additional veterinarian-related options
+open owners dropdown menu
+navigate to owner management section
+access owner-related actions from dropdown
+view list of existing owners
+initiate owner creation flow
+open Owners dropdown menu
+navigate to Owners list page
+access owner management options
+view existing owner records
+edit owner details
+open veterinarians dropdown menu
+click 'Add New Veterinarian' link from dropdown
+navigate to veterinarian form page
+trigger dropdown toggle for veterinarians section
+access veterinarian management interface
+navigate to veterinarians section to view or manage existing vets
+Open the Owners dropdown menu
+Navigate to owner-specific services
+Access owner account settings
+View owner service options
+Navigate to owner dashboard
+open owner dropdown menu
+navigate to owner services page
+access owner-specific features
+trigger owner-related navigation options
+display owner profile or account options
+open veterinarian submenu
+navigate to veterinarian services page
+access veterinarian directory or profiles
+view veterinarian appointment scheduling options
+filter or search for veterinarians by specialty or location
+open veterinarian dropdown menu
+navigate to veterinarian services or directory
+click to expand veterinarian-related navigation options
+access veterinarian-specific content or booking page
+trigger dropdown toggle for veterinarian navigation
+navigate to homepage by clicking brand logo
+open owner dropdown menu
+navigate to owner-specific dashboard
+trigger owner-related navigation options
+display owner profile or account options
+allow switching to owner view context
+open dropdown to view list of veterinarians
+filter veterinarians by specialty
+search for a veterinarian by name or location
+navigate to veterinarian profile page
+view available appointment slots for a veterinarian
+navigate to pet types page
+open modal to select pet type
+filter services by pet type
+display available specialists for selected pet type
+initiate appointment booking for selected pet type
+navigate to the specialties page
+Search for existing pet owner records
+Navigate to the owner search interface
+Initiate a search query for pet owners by criteria
+Display search results for pet owners
+Filter or refine owner search results
+Search for existing pet owner records
+Add a new pet owner record
+Initiate search by clicking the search button
+Add a new pet owner record
+navigate to add new owner form
+initiate creation of a new pet owner record
+open the owner creation interface
+trigger the add owner workflow
+access the owner management add functionality
+navigate to the list of all veterinarians
+View all veterinarians
+Navigate to the list of all veterinarians
+Reset any filters to show all veterinarians
+Confirm the current view displays all available veterinarians
+Verify the list of veterinarians is populated after navigating to 'All'
+Add a new veterinarian to the list
+Add a new veterinarian
+Navigate to the homepage
+Navigate to the homepage from the pet types page
+open owner dropdown menu
+navigate to owner profile section
+access owner account settings
+view owner-related services or appointments
+trigger owner-specific navigation options
+open owner account dropdown menu
+navigate to owner profile page
+access owner dashboard
+view owner-related services or appointments
+manage owner account settings
+open veterinarians dropdown menu
+select a veterinarian from the dropdown list
+trigger vet search or filter by specialty/location
+sort veterinarians by rating or distance
+navigate to vet profile page
+open veterinarians dropdown menu
+select a specific veterinarian from the dropdown
+navigate to the list of available veterinarians
+filter or search for veterinarians by specialty or location
+view veterinarian availability or appointment options
+open owner dropdown menu
+navigate to owner account dashboard
+access owner-specific pet records
+view owner appointment history
+manage owner profile settings
+open owners dropdown menu
+navigate to owners profile page
+access owner account settings
+view owner appointment history
+log in as owner
+open the veterinarians dropdown menu
+navigate to homepage
+display clinic brand logo
+trigger site-wide branding or identity display
+reset user session or navigation context to homepage
+load hero image or introductory content on page load
+navigate to homepage
+display clinic logo or brand name
+trigger site-wide branding or identity display
+reset user session or navigation state to homepage
+load homepage content dynamically on click
+open owner dropdown menu
+navigate to owner dashboard
+access owner-specific services or profile
+view owner account details
+redirect to owner login or registration page
+open dropdown to view list of veterinarians
+filter veterinarians by specialty
+view profile of a specific veterinarian
+search for veterinarians by name or location
+navigate to page showing all available veterinarians
+navigate to pet types page
+view list of available pet types
+filter services by pet type
+select a pet type to proceed to specialist or service options
+trigger dropdown or modal with pet type categories
+navigate to the specialties page
+search for existing pet owner records
+Search for existing pet owner records
+Add a new pet owner record
+Initiate search for owner by clicking search button
+Navigate to owner search page
+Display search results for pet owners
+Add a new pet owner record
+Add a new pet owner record
+Navigate to the new owner form
+Initiate owner data entry
+Open the owner creation interface
+Submit new owner details
+View all veterinarians
+View all veterinarians in the directory
+Add a new veterinarian to the list
+Navigate to the new veterinarian form
+Initiate the process to create a new vet record
+Open the vet creation interface
+Trigger the vet addition workflow
+add new veterinarian
+Navigate to the homepage
+navigate to homepage
+open owner dropdown menu
+navigate to owner profile page
+access owner account settings
+log in as owner
+view owner-related services
+navigate to owner-related section
+open owner dropdown menu
+display owner profile options
+access owner management features
+switch user context to owner view

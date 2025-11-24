@@ -39,6 +39,9 @@ Your is enclosed in two tags:
 - A JSON array of objects, each containing:
     - probability: (0.0 to 1.0) Likelihood of this functionality exists.
     - feature: A concise description of the user action (e.g., "add item to cart").
+    - is_goal: (boolean) Is this a final user goal?
+    - preconditions: (list of strings) Preconditions for this action.
+    - assertions: (list of strings) Expected outcomes/assertions after this action.
 - Sorted by probability in descending order.
 - Parsable by `json.loads`.
 - Can be an empty array if no valid functionalities are found.

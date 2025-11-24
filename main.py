@@ -36,8 +36,19 @@ crawl_context = initialize_variables(crawl_context)
 
 LOOP_COUNTER = 0
 
+# 安全终止阈值（可通过环境变量覆盖）
+MAX_STATES = int(os.getenv('MAX_STATES', '200'))
+MAX_ACTIONS = int(os.getenv('MAX_ACTIONS', '1000'))
 
-while len(crawl_context.crawl_queue) > 0:
+# 访问频控，用于近重复/爆炸路径控制
+visit_counter: dict[str, int] = {}
+
+
+should_stop = False
+
+while len(crawl_context.crawl_queue) > 0 and \
+        len(crawl_context.state_machine.state_graph.states) < MAX_STATES and \
+        not should_stop:
     state: State = crawl_context.crawl_queue.dequeue()
     logger.info(f"Visiting state {state.get_id(StateIdEvaluator.BY_ACTIONS)}")
     crawl_context.state_machine.set_current_state(state)
@@ -58,6 +69,10 @@ while len(crawl_context.crawl_queue) > 0:
     current_state.set_context(state_context)
 
     for action in current_actions:
+        if LOOP_COUNTER >= MAX_ACTIONS:
+            logger.info(f"Reached MAX_ACTIONS={MAX_ACTIONS}, stopping crawl")
+            should_stop = True
+            break
         LOOP_COUNTER += 1
         
         logger.info(f'Executing action {action.element.outerHTML}')
@@ -90,9 +105,14 @@ while len(crawl_context.crawl_queue) > 0:
             new_state: State = crawl_context.create_state_from_driver(new_actions)
             
             if not is_state_in_graph(crawl_context, new_state):
-                print('Adding state', new_state.get_id(StateIdEvaluator.BY_ACTIONS))
-                crawl_context.crawl_queue.enqueue(new_state)
-                crawl_context.state_machine.add_state_from_current_state(new_state, action)
+                # 近重复/访问限制控制
+                visit_counter, forbidden = is_visit_forbidden(new_state, visit_counter)
+                if forbidden:
+                    logger.info(f"Skip visiting state (forbidden by rules): {new_state.url}")
+                else:
+                    print('Adding state', new_state.get_id(StateIdEvaluator.BY_ACTIONS))
+                    crawl_context.crawl_queue.enqueue(new_state)
+                    crawl_context.state_machine.add_state_from_current_state(new_state, action)
             else:
                 should_extract_func = False
 
@@ -111,7 +131,12 @@ while len(crawl_context.crawl_queue) > 0:
                     prev_action_id=state.crawl_path.get_action(-1).get_id() if len(state.crawl_path) > 0 else None,
                     action_test_id=action.element.test_id,
                     action_depth=len(state.crawl_path),
-                    action_type="SINGLE"
+                    action_type="SINGLE",
+                    functionalities=functionalities,
+                    state_context=current_state.context,
+                    prev_state_context=state.crawl_path.get_state(-1).context if len(state.crawl_path) > 0 else None,
+                    prev_state_url=state.crawl_path.get_state(-1).url if len(state.crawl_path) > 0 else None,
+                    action_outer_html=action.element.outerHTML
                 )
         
             if len(current_state.crawl_path) > 0:
@@ -128,7 +153,12 @@ while len(crawl_context.crawl_queue) > 0:
                         prev_action_id=state.crawl_path.get_action(-1).get_id() if len(state.crawl_path) > 0 else None,
                         action_test_id=action.element.test_id,
                         action_depth=len(state.crawl_path),
-                        action_type="DOUBLE"
+                        action_type="DOUBLE",
+                        functionalities=functionalities,
+                        state_context=current_state.context,
+                        prev_state_context=state.crawl_path.get_state(-1).context if len(state.crawl_path) > 0 else None,
+                        prev_state_url=state.crawl_path.get_state(-1).url if len(state.crawl_path) > 0 else None,
+                        action_outer_html=action.element.outerHTML
                     )
                 
                 logger.info('Updating action scores')
@@ -182,6 +212,8 @@ for state_id, neighbor_list in crawl_context.state_machine.state_graph.adjacency
         adj_list_converted[state_id][action_obj.get_id()] = n_state_id
 
 
+os.makedirs('./report', exist_ok=True)
+
 json.dump(
     {
         'nodes': states_converted,
@@ -189,4 +221,3 @@ json.dump(
     },
     open(f'./report/{APP_NAME}.json', 'w+')
 )
-

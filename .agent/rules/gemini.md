@@ -1,3 +1,7 @@
+---
+trigger: always_on
+---
+
 # Repository Guidelines
 ## language
 用中文回答
