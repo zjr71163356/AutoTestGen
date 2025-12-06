@@ -1,7 +1,9 @@
 import os
 import uuid
 import datetime
-from typing import Optional
+from typing import Optional, Iterable, Any
+
+from bson import ObjectId
 
 from autoe2e.mongo_utils import states_db, transitions_db, tasks_db
 from autoe2e.crawler.state import State, StateIdEvaluator
@@ -18,7 +20,9 @@ class GraphStorage:
             "url": state.url,
             "app": os.getenv("APP_NAME"),
             "context": state.context,
-            "created_at": datetime.datetime.utcnow()
+            "created_at": datetime.datetime.utcnow(),
+            # 每次保存视为“正在处理该状态”，后续在主循环结束本状态所有动作后再标记 explored=True
+            "explored": False,
         }
         
         if screenshot_path:
@@ -34,8 +38,8 @@ class GraphStorage:
     def save_transition(
         source_state: State, 
         action: Action, 
-        target_state: Optional[State] = None, 
-        functionality_ids: list[str] = None,
+        target_state: Optional[State] = None,
+        functionality_ids: Iterable[Any] | None = None,
         score: float = 0.0,
         metadata: dict = None
     ):
@@ -112,6 +116,7 @@ class GraphStorage:
         
         doc = {
             "_id": transition_id,
+            "app": os.getenv("APP_NAME"),
             "source_state_id": source_id,
             "action_type": action.get_type().get_value(),
             "element_selector": action.get_id(), # using ID as selector for now
@@ -123,7 +128,12 @@ class GraphStorage:
             doc["target_state_id"] = target_state.get_id(StateIdEvaluator.BY_ACTIONS)
             
         if functionality_ids:
-            doc["functionality_ids"] = functionality_ids
+            # 功能引用统一存储为 ObjectId，兼容传入的字符串形式
+            normalized_ids = [
+                fid if isinstance(fid, ObjectId) else ObjectId(fid)
+                for fid in functionality_ids
+            ]
+            doc["functionality_ids"] = normalized_ids
             
         if score:
             doc["score"] = score
@@ -143,6 +153,7 @@ class GraphStorage:
         # If we want to deduplicate tasks, maybe hash of goal.
         
         doc = {
+            "app": os.getenv("APP_NAME"),
             "goal": goal,
             "steps": steps,
             "status": status,

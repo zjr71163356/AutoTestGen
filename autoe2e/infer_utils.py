@@ -166,8 +166,6 @@ def query_similar_functionalities(embedding):
             '$limit': 5
         }
     ]
-
-    ]
     
     # Use functionalities_db
     similar_funcs = list(functionalities_db.aggregate(query))
@@ -264,8 +262,6 @@ def no_match_insert(match):
         "final": False,
         "executable": True,
         "is_goal": func_data.get('is_goal', False),
-        "preconditions": func_data.get('preconditions', []),
-        "assertions": func_data.get('assertions', [])
     })
     return res.inserted_id
 
@@ -279,10 +275,6 @@ def match_update(match):
     
     if 'is_goal' in func_data:
         update_fields['is_goal'] = func_data['is_goal']
-    if 'preconditions' in func_data:
-        update_fields['preconditions'] = func_data['preconditions']
-    if 'assertions' in func_data:
-        update_fields['assertions'] = func_data['assertions']
 
     # update the text for the initial match
     # update the text for the initial match
@@ -305,41 +297,21 @@ def match_update(match):
                 '_id': { '$in': match['match_id'][1:] }
             }
         )
-    
-        # update transitions to point to the first match
-        # We need to find transitions that have these functionality_ids in their list
-        # and replace them. This is a bit more complex with list field.
-        # For simplicity, let's assume we just pull the old ones and push the new one?
-        # Or just leave it for now as this "merge" logic is complex on array fields.
-        # But we should at least try to update.
-        
-        # Actually, transitions_db stores functionality_ids as a list of strings.
-        # We can use update_many with arrayFilters or just pull/addToSet.
-        
-        # Pull all removed IDs
+        # 将 transitions 中的旧功能引用替换为保留的功能 ID
+        kept_id = match['match_id'][0]
+        removed_ids = match['match_id'][1:]
+        removal_candidates = removed_ids + list(map(str, removed_ids))
+
         transitions_db.update_many(
-            { 'app': os.getenv("APP_NAME") }, # transitions might not have app field? Plan said states have app. Transitions link to states.
-            { '$pull': { 'functionality_ids': { '$in': list(map(str, match['match_id'][1:])) } } }
+            {
+                'app': os.getenv("APP_NAME"),
+                'functionality_ids': { '$in': removal_candidates }
+            },
+            {
+                '$addToSet': { 'functionality_ids': kept_id },
+                '$pull': { 'functionality_ids': { '$in': removal_candidates } }
+            }
         )
-        
-        # Add the kept ID if it was missing (but it might not be relevant to all?)
-        # This logic in original code was: "update action-function pointers".
-        # Original was 1-to-1 or 1-to-many? 
-        # Original: action_func_db had 'func_pointer' (single).
-        # So it was easy to set.
-        
-        # Now we have 'functionality_ids' (list).
-        # If we merged F2 into F1. We should replace F2 with F1 in all transitions.
-        
-        # For each removed ID, we should replace it with the kept ID.
-        for removed_id in match['match_id'][1:]:
-            transitions_db.update_many(
-                 { 'functionality_ids': str(removed_id) },
-                 { '$set': { 'functionality_ids.$': str(match['match_id'][0]) } }
-            )
-            # Note: this might create duplicates in the list if F1 was already there.
-            # But $addToSet doesn't work with positional operator easily for replacement.
-            # Let's stick to simple replacement for now.
     
     return match['match_id'][0]
 
@@ -384,15 +356,18 @@ def update_functionality_score(prev_state, prev_action, curr_state, curr_action)
 
 
 
-def mark_final_functionalities(curr_state, curr_action):
+def mark_final_functionalities(curr_state, curr_action) -> dict[str, bool]:
     # Find transition to get functionality IDs
     transition_id = f"{curr_state.get_id(StateIdEvaluator.BY_ACTIONS)}-{curr_action.get_id()}"
     transition = transitions_db.find_one({"_id": transition_id})
     
     if not transition or "functionality_ids" not in transition:
-        return
+        return {}
 
-    func_ids = [ObjectId(fid) for fid in transition["functionality_ids"]]
+    func_ids = [
+        fid if isinstance(fid, ObjectId) else ObjectId(fid)
+        for fid in transition.get("functionality_ids", [])
+    ]
     
     retreived_funcs = list(functionalities_db.find({
         'app': { '$eq': os.getenv("APP_NAME") },
@@ -400,7 +375,7 @@ def mark_final_functionalities(curr_state, curr_action):
     }))
 
     if len(retreived_funcs) == 0:
-        return
+        return {}
     
     res = sonnet_chain(
         FINALITY_SYSTEM_PROMPT,
@@ -413,12 +388,18 @@ def mark_final_functionalities(curr_state, curr_action):
 
     finality = parse_bool_list(extract_response_content(res))
 
-    for i in range(min(len(finality), len(retreived_funcs))):
-        if finality[i]:
+    finality_map: dict[str, bool] = {}
+
+    for i in range(len(retreived_funcs)):
+        func_doc = retreived_funcs[i]
+        is_final = i < len(finality) and bool(finality[i])
+        finality_map[str(func_doc['_id'])] = is_final
+
+        if is_final:
             functionalities_db.update_one(
                 filter={
                     'app': os.getenv("APP_NAME"),
-                    '_id': retreived_funcs[i]['_id']
+                    '_id': func_doc['_id']
                 },
                 update={
                     '$set': {
@@ -428,6 +409,8 @@ def mark_final_functionalities(curr_state, curr_action):
                 upsert=False
             )
             # We don't need to update action_func_db anymore
+
+    return finality_map
 
 
 # mark_final_functionalities_dict removed
