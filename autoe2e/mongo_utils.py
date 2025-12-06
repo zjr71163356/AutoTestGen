@@ -19,3 +19,7 @@ states_db = db["states"]
 transitions_db = db["transitions"]
 tasks_db = db["tasks"]
 functionalities_db = db["functionalities"]
+scenarios_db = db["scenarios"]
+step_assertions_db = db["step_assertions"]
+feature_scenarios_db = db["feature_scenarios"]  # legacy, kept for迁移/清理
+exploration_state_db = db["exploration_state"]
