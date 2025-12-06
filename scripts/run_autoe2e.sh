@@ -11,10 +11,22 @@ PETCLINIC_FRONTEND_PID=""
 PETCLINIC_BACKEND_CLEANUP="none"
 
 cleanup() {
+  # 优先按记录的 PID 清理本次脚本启动的前端
   if [[ -n "${PETCLINIC_FRONTEND_PID}" ]] && kill -0 "${PETCLINIC_FRONTEND_PID}" 2>/dev/null; then
     echo ">>> 停止 PetClinic 前端 (PID ${PETCLINIC_FRONTEND_PID})"
     kill "${PETCLINIC_FRONTEND_PID}" 2>/dev/null || true
     wait "${PETCLINIC_FRONTEND_PID}" 2>/dev/null || true
+  fi
+
+  # 防御性清理：如果还有进程占用 4200 端口，一并杀掉
+  if command -v lsof >/dev/null 2>&1; then
+    # 只要有任何进程还在监听 4200，就认为是遗留的前端服务
+    FRONTEND_PIDS="$(lsof -ti tcp:4200 2>/dev/null || true)"
+    if [[ -n "${FRONTEND_PIDS}" ]]; then
+      echo ">>> 额外清理占用 4200 端口的前端进程: ${FRONTEND_PIDS}"
+      # shellcheck disable=SC2086
+      kill ${FRONTEND_PIDS} 2>/dev/null || true
+    fi
   fi
 
   case "${PETCLINIC_BACKEND_CLEANUP}" in
