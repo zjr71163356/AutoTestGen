@@ -54,16 +54,17 @@
       - autoe2e/prompts.py:48 SIMILARITY_SYSTEM_PROMPT
       - autoe2e/infer_utils.py:150 map_similar_func_to_exact_match
   - Insert（入库）
-      - autoe2e/infer_utils.py:256 insert_functionalities（FD）
-      - autoe2e/infer_utils.py:276 insert_action_functionality（AFD）
+      - autoe2e/infer_utils.py:256 insert_functionalities（Functionalities）
+      - autoe2e/graph_storage.py: save_transition（Transitions）
   - Update Scores（特征分数）
-      - autoe2e/infer_utils.py:308 update_functionality_score
+      - (已移除/重构)
   - Mark Final（终结性判定）
       - autoe2e/prompts.py:68 FINALITY_SYSTEM_PROMPT
       - autoe2e/infer_utils.py:389 mark_final_functionalities
   - Databases
-      - autoe2e/mongo_utils.py:15 Feature DB func_db
-      - autoe2e/mongo_utils.py:14 Action-Feature DB action_func_db
+      - autoe2e/mongo_utils.py:15 Functionalities DB functionalities_db
+      - autoe2e/mongo_utils.py:14 Transitions DB transitions_db
+      - autoe2e/mongo_utils.py:13 States DB states_db
 
   管道编排与初始化
 
@@ -93,7 +94,7 @@
         autoe2e/infer_utils.py:500
   - 功能聚合与打分（III.D）
       - 相似检索与合并：autoe2e/infer_utils.py:115, autoe2e/infer_utils.py:150
-      - 入库与指针（FD/AFD）：autoe2e/infer_utils.py:256, autoe2e/infer_utils.py:276, autoe2e/mongo_utils.py:14,
+      - 入库与指针（Functionalities/Transitions）：autoe2e/infer_utils.py:256, autoe2e/graph_storage.py, autoe2e/mongo_utils.py:14,
         autoe2e/mongo_utils.py:15
       - 分数更新与终结判定：autoe2e/infer_utils.py:308, autoe2e/infer_utils.py:389, autoe2e/prompts.py:68
   - 决策与路径规划
