@@ -1,6 +1,7 @@
 import os
 import time
 import json
+import datetime
 
 from autoe2e.utils import *
 from autoe2e.init_utils import *
@@ -8,13 +9,45 @@ from autoe2e.infer_utils import *
 from autoe2e.loop_utils import *
 from autoe2e.mongo_utils import *
 from autoe2e.manual_ndd import *
+from autoe2e.graph_storage import GraphStorage
+from autoe2e.scenario_storage import save_step_assertions
+from autoe2e.task_synthesis import synthesize_tasks_for_app
 
 
 APP_NAME = os.getenv('APP_NAME', 'PETCLINIC')
+RESET_EXPLORATION = os.getenv('RESET_EXPLORATION', 'false').lower() == 'true'
 
+# 根据需要决定是否从头重置探索状态
+if RESET_EXPLORATION:
+    logger.info(f"RESET_EXPLORATION=True, 清空 {APP_NAME} 的探索相关数据")
+    states_db.delete_many({ 'app': APP_NAME })
+    transitions_db.delete_many({ 'app': APP_NAME })
+    functionalities_db.delete_many({ 'app': APP_NAME })
+    feature_scenarios_db.drop()
+    step_assertions_db.delete_many({ 'app': APP_NAME })
+    scenarios_db.delete_many({ 'app': APP_NAME })
+    tasks_db.delete_many({ 'app': APP_NAME })
+    exploration_state_db.delete_one({ '_id': APP_NAME })
+else:
+    meta = exploration_state_db.find_one({ '_id': APP_NAME })
+    if meta and meta.get('completed'):
+        logger.info(f"应用 {APP_NAME} 已经完成探索，本次跳过爬取，仅基于现有数据重建 tasks")
+        # 重新生成任务，确保使用最新的合成逻辑
+        tasks_db.delete_many({ 'app': APP_NAME })
+        synthesize_tasks_for_app(APP_NAME)
+        raise SystemExit(0)
 
-action_func_db.delete_many({ 'app': APP_NAME })
-func_db.delete_many({ 'app': APP_NAME })
+# 迁移/清理废弃的 feature_scenarios 集合（将数据复制到 step_assertions，随后删除）
+try:
+    legacy_docs = list(feature_scenarios_db.find({ 'app': APP_NAME }))
+    if legacy_docs:
+        logger.info(f\"检测到 legacy feature_scenarios {len(legacy_docs)} 条，开始迁移到 step_assertions\")
+        step_assertions_db.insert_many(legacy_docs)
+    feature_scenarios_db.drop()
+    if legacy_docs:
+        logger.info(\"迁移完成并删除 feature_scenarios 集合\")
+except Exception as exc:
+    logger.warning(f\"迁移/删除 feature_scenarios 失败: {exc}\")
 
 
 crawl_context: CrawlContext = CrawlContext()
@@ -67,11 +100,19 @@ while len(crawl_context.crawl_queue) > 0 and \
         current_state.crawl_path.get_action(-1) if len(current_state.crawl_path) > 0 else None,
     )
     current_state.set_context(state_context)
+    
+    state_id = current_state.get_id(StateIdEvaluator.BY_ACTIONS)
+    screenshot_path = f'{crawl_context.config.temp_dir}/screenshot_{state_id}.png'
+    # 保存当前状态快照，并将 explored 标记为 False（处理完所有动作后再置 True）
+    GraphStorage.save_state(current_state, screenshot_path)
+
+    state_fully_processed = True
 
     for action in current_actions:
         if LOOP_COUNTER >= MAX_ACTIONS:
             logger.info(f"Reached MAX_ACTIONS={MAX_ACTIONS}, stopping crawl")
             should_stop = True
+            state_fully_processed = False
             break
         LOOP_COUNTER += 1
         
@@ -120,69 +161,75 @@ while len(crawl_context.crawl_queue) > 0 and \
             logger.info(f'Extracting action scenarios: {action.element.outerHTML}')
 
             functionalities = extract_action_functionalities(current_state, action)
+            functionality_ids = []
+            finality_map = {}
+
             if len(functionalities) != 0:
                 functionality_ids = insert_functionalities(functionalities)
-                insert_action_functionality(
-                    func_ids=functionality_ids,
-                    state_id=state.get_id(StateIdEvaluator.BY_ACTIONS),
-                    state_url=state.url,
-                    prev_state_id=state.crawl_path.get_state(-1).get_id(StateIdEvaluator.BY_ACTIONS) if len(state.crawl_path) > 0 else None,
-                    action_id=action.get_id(),
-                    prev_action_id=state.crawl_path.get_action(-1).get_id() if len(state.crawl_path) > 0 else None,
-                    action_test_id=action.element.test_id,
-                    action_depth=len(state.crawl_path),
-                    action_type="SINGLE",
-                    functionalities=functionalities,
-                    state_context=current_state.context,
-                    prev_state_context=state.crawl_path.get_state(-1).context if len(state.crawl_path) > 0 else None,
-                    prev_state_url=state.crawl_path.get_state(-1).url if len(state.crawl_path) > 0 else None,
-                    action_outer_html=action.element.outerHTML
-                )
-        
-            if len(current_state.crawl_path) > 0:
-                logger.info('Extracting double action scenarios')
-                functionalities = extract_action_functionalities(current_state, action, current_state.crawl_path.get_action(-1))
-                if len(functionalities) != 0:
-                    functionality_ids = insert_functionalities(functionalities)
-                    insert_action_functionality(
-                        func_ids=functionality_ids,
-                        state_id=state.get_id(StateIdEvaluator.BY_ACTIONS),
-                        state_url=state.url,
-                        prev_state_id=state.crawl_path.get_state(-1).get_id(StateIdEvaluator.BY_ACTIONS) if len(state.crawl_path) > 0 else None,
-                        action_id=action.get_id(),
-                        prev_action_id=state.crawl_path.get_action(-1).get_id() if len(state.crawl_path) > 0 else None,
-                        action_test_id=action.element.test_id,
-                        action_depth=len(state.crawl_path),
-                        action_type="DOUBLE",
-                        functionalities=functionalities,
-                        state_context=current_state.context,
-                        prev_state_context=state.crawl_path.get_state(-1).context if len(state.crawl_path) > 0 else None,
-                        prev_state_url=state.crawl_path.get_state(-1).url if len(state.crawl_path) > 0 else None,
-                        action_outer_html=action.element.outerHTML
-                    )
                 
-                logger.info('Updating action scores')
-    
-                update_functionality_score(
-                    current_state.crawl_path.get_state(-1),
-                    current_state.crawl_path.get_action(-1),
-                    current_state,
-                    action
+                GraphStorage.save_transition(
+                    source_state=current_state,
+                    action=action,
+                    functionality_ids=[str(fid) for fid in functionality_ids],
+                    score=geometric_score(0) # Default score?
                 )
-
-                logger.info('Action scores updated')
-
-            logger.info('Marking final functionalities')
-
-            mark_final_functionalities(current_state, action)
-
-            logger.info('Final actions marked')
         
+                # Double action scenarios not fully supported in new schema yet
+                # But we can save them as transitions if we had a way to represent them.
+                # For now, skipping to match infer_utils refactor.
+
+                logger.info('Marking final functionalities')
+                finality_map = mark_final_functionalities(current_state, action)
+                logger.info('Final actions marked')
+
+                save_step_assertions(
+                    state=current_state,
+                    action=action,
+                    functionalities=functionalities,
+                    functionality_ids=functionality_ids,
+                    is_critical_action=is_critical,
+                    finality_map=finality_map,
+                )
+            else:
+                logger.info('Marking final functionalities')
+                mark_final_functionalities(current_state, action)
+                logger.info('Final actions marked')
+        
+        # 当前动作完成后回到当前状态对应的页面
         crawl_context.load_state(crawl_context.state_machine.get_current_state())
 
         logger.info("")
 
+    # 当前状态已完成本轮动作处理，标记 explored
+    states_db.update_one(
+        {
+            "_id": state_id,
+            "app": APP_NAME,
+        },
+        {
+            "$set": {
+                "explored": state_fully_processed,
+            }
+        },
+        upsert=True
+    )
+
 crawl_context.driver.quit()
+
+
+# 记录本次探索是否已经完成（队列为空且未触发安全终止）
+exploration_completed = (not should_stop) and (len(crawl_context.crawl_queue) == 0)
+exploration_state_db.update_one(
+    { "_id": APP_NAME },
+    {
+        "$set": {
+            "app": APP_NAME,
+            "completed": exploration_completed,
+            "last_updated": datetime.datetime.utcnow(),
+        }
+    },
+    upsert=True
+)
 
 
 states_converted = {}
@@ -221,3 +268,7 @@ json.dump(
     },
     open(f'./report/{APP_NAME}.json', 'w+')
 )
+
+# 基于已经写入 MongoDB 的 functionalities + step_assertions/scenarios 合成任务
+tasks_db.delete_many({ 'app': APP_NAME })
+synthesize_tasks_for_app(APP_NAME)
